@@ -9,7 +9,7 @@
         <div class="mb-4">
           <div class="flex justify-between items-center mb-2">
             <span class="text-gray-600"> Storage </span>
-            <a class="text-blue-500 text-sm" href="#"> Change plan </a>
+            <a class="text-gray-500 text-sm" href="#"> Change plan </a>
           </div>
           <div class="relative pt-1">
             <div class="overflow-hidden h-2 mb-2 text-xs flex rounded bg-blue-200">
@@ -18,59 +18,94 @@
                 :style="{ width: usagePercentage + '%' }"
               ></div>
             </div>
-            <span class="text-gray-800 text-xl"><span class="text-blue-600">{{ usagePercentage.toFixed(1) }} %</span> used of 2GB
-              </span>
+            <span class="text-gray-800 text-xl"
+              ><span class="text-blue-600">{{ usagePercentage.toFixed(1) }} %</span> used
+              of 2GB
+            </span>
           </div>
         </div>
-        <div class="mb-4">
-          <input
-            v-model="searchQuery"
-            class="w-full p-2 border rounded"
-            placeholder="e.g. image.png"
-            type="text"
-          />
+        <div class="mb-4 relative">
+          <div class="relative">
+            <input
+              v-model="searchQuery"
+              class="w-full p-2 pl-10 border rounded"
+              placeholder="e.g. image.png"
+              type="text"
+            />
+            <i
+              class="fa-solid fa-magnifying-glass absolute right-3 top-1 transform -translate-y-1/2 text-gray-400"
+            ></i>
+          </div>
         </div>
         <div class="mb-4">
           <div class="flex justify-between items-center mb-2">
             <span class="text-gray-600"> Folders </span>
-            <a class="text-blue-500 text-sm" href="#"> New folder </a>
+            <a class="text-gray-500 text-sm" href="#"> New folder </a>
           </div>
           <ul class="text-gray-600">
             <li v-for="folder in filteredFolders" :key="folder.id" class="mb-2">
-              <div
-                @click="selectFolder(folder)"
-                :class="
-                  selectedFolder && selectedFolder.id === folder.id
-                    ? 'text-[black]'
-                    : 'text-gray-400'
-                "
-                class="cursor-pointer p-1 rounded flex justify-between items-center"
-              >
-                <div>
-                  <i class="fa-solid fa-folder-open mr-2"></i>
+              <div @click="selectFolder(folder)" class="item-container">
+                <div class="flex items-center font-bold">
+                  <i
+                    :class="[
+                      'fa-solid fa-sort-up mr-4',
+                      isFolderSelected(folder)
+                        ? 'text-gray-800'
+                        : 'text-gray-300 rotate-right',
+                    ]"
+                  ></i>
+                  <i
+                    class="fa-solid fa-folder-open mr-2"
+                    :class="[
+                      'fa-solid fa-folder-open mr-4',
+                      isFolderSelected(folder) ? 'text-gray-800' : 'text-gray-300',
+                    ]"
+                  ></i>
                   {{ folder.name }}
                 </div>
-                <span v-if="folder.children.length >= 0" class="badge">{{
-                  folder.children.length
-                }}</span>
+                <span v-if="folder.children.length >= 0" class="badge-gray">
+                  {{ folder.children.length }}
+                </span>
               </div>
-              <ul v-if="folder.children.length > 0" class="ml-4 mt-1">
+              <ul v-if="folder.children.length > 0" class="ml-4">
                 <li v-for="subfolder in folder.children" :key="subfolder.id" class="mb-1">
                   <div
                     @click="selectSubfolder(subfolder)"
-                    :class="{
-                      'bg-blue-200 text-blue-500':
-                        selectedSubfolder && selectedSubfolder.id === subfolder.id,
-                    }"
-                    class="cursor-pointer p-1 rounded flex justify-between items-center"
+                    :class="[
+                      'item-container',
+                      {
+                        'bg-blue-200 text-blue-500': isSubfolderSelected(subfolder),
+                      },
+                    ]"
                   >
-                    <div>
-                      <i class="fa-solid fa-folder-open mr-2"></i>
+                    <div class="flex items-center font-bold">
+                      <i
+                        :class="[
+                          'fa-solid fa-sort-up rotate-right mr-4',
+                          isSubfolderSelected(subfolder)
+                            ? 'text-blue-500'
+                            : 'text-gray-300',
+                        ]"
+                      ></i>
+                      <i
+                        :class="[
+                          'fa-solid fa-folder-open mr-2',
+                          isSubfolderSelected(subfolder)
+                            ? 'text-blue-500'
+                            : 'text-gray-300',
+                        ]"
+                      ></i>
                       {{ subfolder.name }}
                     </div>
-                    <span v-if="subfolder.children.length >= 0" class="badge">{{
-                      subfolder.children.length
-                    }}</span>
+                    <span
+                      v-if="subfolder.children.length >= 0"
+                      :class="[
+                        'badge-gray',
+                        { 'badge-blue': isSubfolderSelected(subfolder) },
+                      ]"
+                    >
+                      {{ subfolder.children.length }}
+                    </span>
                   </div>
                 </li>
               </ul>
@@ -80,28 +115,30 @@
         <div>
           <div class="flex justify-between items-center mb-2">
             <span class="text-gray-600"> Members </span>
-            <a @click="selectAllMembers" class="text-blue-500 text-sm cursor-pointer">
+            <a @click="selectAllMembers" class="text-gray-500 text-sm cursor-pointer">
               Select all
             </a>
           </div>
-          <ul class="text-gray-600">
+          <ul class="font-bold">
             <li class="mb-2">
               <input
+                id="checkbox-all"
                 v-model="members.All"
                 @change="updateMembers"
                 class="mr-2"
                 type="checkbox"
               />
-              All
+              <label for="checkbox-all">All</label>
             </li>
-            <li class="mb-2">
+            <li class="mb-2 font-bold">
               <input
+                id="checkbox-admin"
                 v-model="members.Admin"
                 @change="updateMembers"
                 class="mr-2"
                 type="checkbox"
               />
-              Admin
+              <label for="checkbox-admin">Admin</label>
             </li>
           </ul>
         </div>
@@ -111,10 +148,10 @@
         <div class="overflow-y-auto">
           <table class="w-full">
             <thead>
-              <tr class="text-left text-gray-600">
-                <th class="w-1/12"><input class="mr-2" type="checkbox" /></th>
+              <tr class="text-left text-gray-400 font-light">
+                <th class="w-1/12"><input class="mr-2" type="checkbox" disabled /></th>
                 <th class="w-1/3">Select all</th>
-                <th class="w-1/6">Name <i class="fa-solid fa-sort"></i></th>
+                <th class="w-1/6 pl-4">Name <i class="fa-solid fa-sort"></i></th>
                 <th class="w-1/6">Dimension <i class="fa-solid fa-sort"></i></th>
                 <th class="w-1/6">Size <i class="fa-solid fa-sort"></i></th>
               </tr>
@@ -127,7 +164,7 @@
                 <td class="p-2 relative">
                   <img :src="file.url" :alt="file.name" class="w-80 h-24 rounded" />
                 </td>
-                <td>
+                <td class="pl-4">
                   {{ file.name }}
                 </td>
                 <td>{{ file.dimension }}</td>
@@ -339,15 +376,21 @@ const selectFolder = (folder) => {
   selectedSubfolder.value = null; // Reset subfolder khi chọn folder
 };
 
-// Chọn subfolder
+// Chọn subfolder và tự động chọn folder cha
 const selectSubfolder = (subfolder) => {
   selectedSubfolder.value = subfolder;
+
+  // Tìm folder cha chứa subfolder này
+  const parentFolder = data.value.find((folder) =>
+    folder.children.some((sf) => sf.id === subfolder.id)
+  );
+  selectedFolder.value = parentFolder || null; // Gán folder cha, hoặc null nếu không tìm thấy
 };
 
 // Xử lý khi thay đổi member
 const updateMembers = () => {
   if (!members.value.All && !members.value.Admin) {
-    members.value.All = true; // Đảm bảo ít nhất một member được chọn
+    members.value.All = true;
   }
 };
 
@@ -356,6 +399,11 @@ const selectAllMembers = () => {
   members.value.All = true;
   members.value.Admin = true;
 };
+
+const selectedFolderId = computed(() => selectedFolder.value?.id);
+const isFolderSelected = (folder) => selectedFolderId.value === folder.id;
+const selectedSubfolderId = computed(() => selectedSubfolder.value?.id);
+const isSubfolderSelected = (subfolder) => selectedSubfolderId.value === subfolder.id;
 
 // Mặc định chọn folder "Uploads"
 onMounted(() => {
@@ -367,17 +415,45 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.read-the-docs {
-  color: #888;
+.rotate-right {
+  transform: rotate(90deg);
+  display: inline-block;
 }
 
-/* Style cho badge hiển thị số lượng */
-.badge {
-  background-color: #3b82f6; /* Màu xanh dương giống trong hình */
-  color: black;
-  border-radius: 9999px; /* Vòng tròn */
-  padding: 0.1rem 0.5rem;
-  font-size: 0.75rem; /* Kích thước chữ nhỏ */
-  line-height: 1;
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.right-3 {
+  right: 0.75rem;
+}
+
+.top-1 {
+  top: 50%;
+}
+
+.transform {
+  transform: translateY(-50%);
+}
+
+.item-container {
+  @apply cursor-pointer p-1 rounded flex justify-between items-center;
+}
+
+.rotate-right {
+  transform: rotate(90deg);
+  display: inline-block;
+}
+
+.badge-gray {
+  @apply bg-gray-200 text-gray-800 rounded-full px-2 py-1 text-xs font-bold;
+}
+
+.badge-blue {
+  @apply bg-blue-500 text-white font-bold;
 }
 </style>
